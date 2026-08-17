@@ -9,10 +9,24 @@
     "node": ">=20"
   },
   "exports": {
-    ".": "./src/dsh/index.ts",
-    "./core": "./src/core/index.ts",
+    ".": {
+      "types": "./dist/dsh/index.d.ts",
+      "default": "./dist/dsh/index.js"
+    },
+    "./core": {
+      "types": "./dist/core/index.d.ts",
+      "default": "./dist/core/index.js"
+    },
     "./package.json": "./package.json"
   },
+  "files": [
+    "dist",
+    "cordis.patch.yml",
+    "commitments.example.yaml",
+    "docs/API-CONTRACT.md",
+    "README.md",
+    "LICENSE"
+  ],
   "dsh": {
     "bundle": {
       "patch": "./cordis.patch.yml"
@@ -21,7 +35,9 @@
   "scripts": {
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "build": "rm -rf dist && tsc -p tsconfig.build.json",
+    "demo": "pnpm build && node demo/run.mjs"
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": ">=4.0.1 <5",
