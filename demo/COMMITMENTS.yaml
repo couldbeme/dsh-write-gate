@@ -1,0 +1,26 @@
+# Demo commitments: the operator's standing constraints for the "tune the deploy config" task.
+version: 1
+
+defaults:
+  failMode: closed
+  judgeBudgetPerStep: 8
+
+commitments:
+  - id: no-prod-config
+    statement: Never modify production configuration files directly.
+    match:
+      kinds: [fs-write]
+      paths: ["config/prod/**"]
+
+  - id: no-force-push
+    statement: Never force-push to a shared branch.
+    match:
+      kinds: [shell]
+      commands: ["git\\s+push\\s+[^\\n]*(-f\\b|--force)"]
+
+  - id: stay-on-task
+    statement: Do not modify files unrelated to the assigned task.
+    severity: warn
+    semantic: true
+    match:
+      kinds: [fs-write]

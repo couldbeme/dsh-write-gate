@@ -30,6 +30,10 @@ The tier-2 judge rubric is ported verbatim from that lineage and was measured at
 
 Run everything: `pnpm install && pnpm test` (51 tests) and `pnpm typecheck`.
 
+Watch the drift story: `pnpm demo` — deterministic, no model required. In-scope work passes, a prod-config edit and a force-push block, and a rogue allow-everything listener fails to bypass the monotonic guard; the contradictions log prints at the end.
+
+Measure the judge yourself: `pnpm build && node scripts/judge-eval.mjs --url <openai-compatible-endpoint> --model <model>` runs all 34 fixture cases live and reports per-set accuracy, abstains, and misses.
+
 ## Commitments file
 
 ```yaml
@@ -72,7 +76,7 @@ Config keys: `commitmentsFile` (default `COMMITMENTS.yaml`, resolved from cwd), 
 
 ## Roadmap
 
-1. Deterministic replay demo in dsh house style (llm-replay fixtures): an agent drifts toward a violating self-modification, the gate blocks, the contradictions log explains.
+1. llm-replay fixture variant of the demo (dsh snapshot format), so the story replays inside a full agent loop.
 2. The gate benchmark: catch rate, false-block rate, and judge agreement (class-balanced kappa) over labeled trajectories, scoring any guard, this one included.
 3. Claude Code adapter over the same core.
 
