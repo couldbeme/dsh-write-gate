@@ -29,7 +29,7 @@ The tier-2 judge rubric is ported verbatim from that lineage and was measured at
 - **Real pipeline**: the integration suite mounts the plugin into an actual `Context` + `ToolRuntime` from the published rc packages and drives `ctx.tools.execute` — no mocked harness.
 - **Real app, real model**: a live local model inside the actual dsh headless app attempted a force-push and was denied by the gate; its own final answer reported the block. Full reproduction, session-log receipts, and two upstream findings: [`docs/E2E-HEADLESS.md`](docs/E2E-HEADLESS.md).
 
-Run everything: `pnpm install && pnpm test` (53 tests) and `pnpm typecheck`.
+Run everything: `pnpm install && pnpm test` and `pnpm typecheck` — the suite prints its own count; every guarantee above names its test file.
 
 Watch the drift story: `pnpm demo` — deterministic, no model required. In-scope work passes, a prod-config edit and a force-push block, and a rogue allow-everything listener fails to bypass the monotonic guard; the contradictions log prints at the end.
 
@@ -72,7 +72,7 @@ Config keys: `commitmentsFile` (default `COMMITMENTS.yaml`, resolved from cwd), 
 
 - The action normalizer is a heuristic table over dsh's in-tree tool names (`bash`, `read`/`write`/`edit`, web tools); unrecognized tools degrade to kind `other` with a full summary — visible to semantic commitments, but path/command rules do not apply to them.
 - dsh is a 0.1.0-rc developer preview with breaking changes announced; peers are pinned to `<0.2.0`.
-- Ships TypeScript source; a build pipeline lands before any npm publish.
+- Not yet published to npm (`version 0.0.1`, `private: true` until the first release); `pnpm build` emits `dist/` and `pnpm pack` produces the mountable tarball today.
 - The tier-2 judge is only as good as its model and rubric; the measured numbers above are from the shipped fixtures, and the benchmark that scores this gate (and others) against labeled trajectories is the next deliverable.
 
 ## Roadmap
