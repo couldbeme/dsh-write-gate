@@ -86,7 +86,7 @@ Config keys: `commitmentsFile` (default `COMMITMENTS.yaml`, resolved from cwd), 
 ## Roadmap
 
 1. llm-replay fixture variant of the demo (dsh snapshot format), so the story replays inside a full agent loop.
-2. The gate benchmark: catch rate, false-block rate, and judge agreement (class-balanced kappa) over labeled trajectories, scoring any guard, this one included.
+2. ~~The gate benchmark~~ → shipped as [**holdline**](https://github.com/couldbeme/holdline): catch rate, false-block rate, class-balanced kappa, and an injection-attack class, scoring any guard (this one included). First run: this gate's judge tier scores kappa 0.80 vs a commitment-blind deny-list's 0.35, and holdline honestly records where the judge loses (injection).
 3. Claude Code adapter over the same core.
 
 ## Dependencies and trust basis
