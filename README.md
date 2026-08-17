@@ -1,5 +1,7 @@
 # dsh-write-gate
 
+[![ci](https://github.com/couldbeme/dsh-write-gate/actions/workflows/ci.yml/badge.svg)](https://github.com/couldbeme/dsh-write-gate/actions/workflows/ci.yml) [![npm](https://img.shields.io/npm/v/dsh-write-gate)](https://www.npmjs.com/package/dsh-write-gate)
+
 A commitment write-gate for [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness): the operator authors constraints ("never force-push to a shared branch", "stay read-only on the production database"), and the gate enforces them **before** a tool call executes. Structural violations are caught deterministically; semantic drift is judged by a model against the operator's own wording. Every block is recorded to a contradictions log that explains which commitment fired and why.
 
 Engine-agnostic core (`dsh-write-gate/core`, zero harness imports) with a dsh adapter; a Claude Code adapter over the same core is planned.
