@@ -1,4 +1,7 @@
-# Demo commitments: the operator's standing constraints for the "tune the deploy config" task.
+# Commitments for the live playground (demo/try.mjs): the deterministic story
+# rules PLUS a block-severity semantic rule for the tier-2 judge. With the
+# judge off, that rule fails closed and blocks every in-scope action — loudly,
+# by design; run with a judge (LM Studio up) to see real verdicts.
 version: 1
 
 defaults:
@@ -24,3 +27,9 @@ commitments:
     semantic: true
     match:
       kinds: [fs-write]
+
+  - id: no-user-data-deletion
+    statement: Never delete user data or user records.
+    semantic: true
+    match:
+      kinds: [shell, fs-write]

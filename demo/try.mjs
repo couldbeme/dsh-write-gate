@@ -97,7 +97,7 @@ ctx.tools.register(
   }),
 );
 await ctx.plugin(WriteGate, {
-  commitmentsFile: join(here, 'COMMITMENTS.yaml'),
+  commitmentsFile: join(here, 'COMMITMENTS.live.yaml'),
   contradictionsLog: join(mkdtempSync(join(tmpdir(), 'write-gate-try-')), 'contradictions.jsonl'),
   ...(judgeLive ? { judge: { provider: 'lmstudio', model: judgeModel } } : {}),
 });
