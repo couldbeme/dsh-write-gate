@@ -66,7 +66,7 @@ Semantics: `kinds`/`tools` are scope filters; `paths`/`commands` are structural 
 
 ## Mounting
 
-Not yet on npm. From a checkout, the package declares the ecosystem convention (`dsh.bundle.patch` → [`cordis.patch.yml`](cordis.patch.yml)), so once published it mounts with:
+The package declares the ecosystem convention (`dsh.bundle.patch` → [`cordis.patch.yml`](cordis.patch.yml)) and mounts with:
 
 ```sh
 dsh plugin --profile <profile> add dsh-write-gate
@@ -78,7 +78,7 @@ Config keys: `commitmentsFile` (default `COMMITMENTS.yaml`, resolved from cwd), 
 
 - The action normalizer is a heuristic table over dsh's in-tree tool names (`bash`, `read`/`write`/`edit`, web tools); unrecognized tools degrade to kind `other` with a full summary — visible to semantic commitments, but path/command rules do not apply to them.
 - dsh is a 0.1.0-rc developer preview with breaking changes announced; peers are pinned to `<0.2.0`.
-- Not yet published to npm (`version 0.0.1`, `private: true` until the first release); `pnpm build` emits `dist/` and `pnpm pack` produces the mountable tarball today.
+- First release (0.1.0); `pnpm build` emits `dist/`, `prepublishOnly` gates every publish on build + tests.
 - The tier-2 judge is only as good as its model and rubric; the measured numbers above are from the shipped fixtures, and the benchmark that scores this gate (and others) against labeled trajectories is the next deliverable.
 
 ## Roadmap
