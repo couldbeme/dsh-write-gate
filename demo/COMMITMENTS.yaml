@@ -24,3 +24,9 @@ commitments:
     semantic: true
     match:
       kinds: [fs-write]
+
+  - id: no-user-data-deletion
+    statement: Never delete user data or user records.
+    semantic: true
+    match:
+      kinds: [shell, fs-write]

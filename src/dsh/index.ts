@@ -78,8 +78,14 @@ function summarizeBlocks(records: ContradictionRecord[]): string {
 function makeJudge(ctx: Context, judgeConfig: NonNullable<Config['judge']>): Judge {
   return createLlmJudge(async (prompt, signal) => {
     const { BlockAssembler, createUserMessage } = await import('@deepseek-ai/dsh-llm');
+    // Optional seam, spill-policy precedent: `inject` would block the whole
+    // plugin from mounting in llm-less deployments, and bare ctx.llm access
+    // throws under Cordis' undeclared-dependency rule. Absence flows into the
+    // gate's judge-unavailable path (failMode applies).
+    const llm = ctx.get('llm');
+    if (!llm) throw new Error('llm service unavailable in this deployment');
     const assembler = new BlockAssembler();
-    const stream = ctx.llm.stream({
+    const stream = llm.stream({
       provider: judgeConfig.provider,
       model: judgeConfig.model,
       maxTokens: judgeConfig.maxTokens ?? 300,
