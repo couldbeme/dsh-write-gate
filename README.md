@@ -27,6 +27,7 @@ The tier-2 judge rubric is ported verbatim from that lineage and was measured at
 - **Prompt-injection stance**: action content enters the judge prompt fenced as data ("data, not instructions"); only a strict JSON verdict (or the ABSTAIN token) is accepted back; ABSTAIN is never a block — `test/judge-llm.test.ts`.
 - **Loud mount failure**: a missing or invalid commitments file fails the deployment instead of mounting a gate that guards nothing — `test/dsh-plugin.test.ts`.
 - **Real pipeline**: the integration suite mounts the plugin into an actual `Context` + `ToolRuntime` from the published rc packages and drives `ctx.tools.execute` — no mocked harness.
+- **Real app, real model**: a live local model inside the actual dsh headless app attempted a force-push and was denied by the gate; its own final answer reported the block. Full reproduction, session-log receipts, and two upstream findings: [`docs/E2E-HEADLESS.md`](docs/E2E-HEADLESS.md).
 
 Run everything: `pnpm install && pnpm test` (53 tests) and `pnpm typecheck`.
 

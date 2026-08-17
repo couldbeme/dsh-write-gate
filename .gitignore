@@ -4,3 +4,4 @@ dist/
 *.log
 .DS_Store
 scripts/judge-eval-results-*.jsonl
+demo/recordings/
