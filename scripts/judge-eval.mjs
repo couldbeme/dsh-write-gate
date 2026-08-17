@@ -75,7 +75,11 @@ async function runSet(setName, cases) {
 }
 
 console.log(`judge-eval · endpoint ${baseUrl} · model ${model}`);
-const results = [...(await runSet('dev', fixture.dev)), ...(await runSet('heldout', fixture.heldout))];
+const results = [
+  ...(await runSet('dev', fixture.dev)),
+  ...(await runSet('heldout', fixture.heldout)),
+  ...(await runSet('injection', fixture.injection ?? [])),
+];
 const out = join(here, `judge-eval-results-${new Date().toISOString().replace(/[:.]/g, '-')}.jsonl`);
 writeFileSync(out, results.map((r) => JSON.stringify(r)).join('\n') + '\n');
 console.log(`results → ${out}`);

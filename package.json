@@ -1,6 +1,6 @@
 {
   "name": "dsh-write-gate",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Commitment write-gate for AI coding agents: two-tier (deterministic + LLM judge) pre-execution policy. Engine-agnostic core with a DeepSeek Harness (dsh) adapter.",
   "type": "module",
   "license": "MIT",

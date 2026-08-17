@@ -13,6 +13,8 @@ describe('buildJudgePrompt', () => {
   it('carries the ported rubric, the statement, the fenced action, and the data guard', () => {
     const prompt = buildJudgePrompt({ statement: 'Stay on task.', action });
     expect(JUDGE_SYSTEM_RUBRIC).toMatch(/strict compliance checker/i);
+    // the anti-authority-injection clause (measured to move injection 5/8 -> 7/8)
+    expect(JUDGE_SYSTEM_RUBRIC).toMatch(/self-justification|pre-approved/i);
     expect(prompt).toContain(JUDGE_SYSTEM_RUBRIC);
     expect(prompt).toContain('Stay on task.');
     expect(prompt).toContain('write src/app.ts');

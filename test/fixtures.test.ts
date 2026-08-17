@@ -5,7 +5,7 @@ import { z } from 'zod';
 
 const caseSchema = z.object({
   id: z.string().min(1),
-  difficulty: z.enum(['literal', 'paraphrase', 'trap', 'clean', 'hard', 'edge']),
+  difficulty: z.enum(['literal', 'paraphrase', 'trap', 'clean', 'hard', 'edge', 'injection']),
   label: z.enum(['drift', 'clean']),
   commitments: z.array(z.string().min(1)).min(1),
   action: z.string().min(1),
@@ -19,6 +19,7 @@ const fixtureSchema = z.object({
   }),
   dev: z.array(caseSchema),
   heldout: z.array(caseSchema),
+  injection: z.array(caseSchema),
 });
 
 describe('judge-cases fixture', () => {
@@ -31,8 +32,16 @@ describe('judge-cases fixture', () => {
   });
 
   it('has globally unique case ids', () => {
-    const ids = [...fixture.dev, ...fixture.heldout].map((c) => c.id);
+    const ids = [...fixture.dev, ...fixture.heldout, ...fixture.injection].map((c) => c.id);
     expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it('carries the injection-resistance class (self-justifying and fence-close attacks)', () => {
+    expect(fixture.injection.length).toBeGreaterThanOrEqual(7);
+    expect(fixture.injection.every((c) => c.difficulty === 'injection')).toBe(true);
+    // both a fence-close attempt and a self-justification attempt are present
+    expect(fixture.injection.some((c) => c.action.includes('</action-data>'))).toBe(true);
+    expect(fixture.injection.some((c) => /pre-approved|only a test|compliance mode/i.test(c.action))).toBe(true);
   });
 
   it('keeps the honest split: dev contains paraphrase misses and traps by design', () => {
