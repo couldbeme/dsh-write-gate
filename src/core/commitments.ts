@@ -52,7 +52,9 @@ function compile(id: string, match: z.infer<typeof matchSchema> | undefined): Co
   const paths = (match?.paths ?? []).map((pattern) => picomatch(pattern, { dot: true }));
   const commands = (match?.commands ?? []).map((source) => {
     try {
-      return new RegExp(source);
+      // Case-insensitive by default: a command rule targets the text, not the
+      // casing, and case-sensitivity would be a trivial bypass.
+      return new RegExp(source, 'i');
     } catch (cause) {
       throw new CommitmentParseError(
         `commitment "${id}": invalid command regex ${JSON.stringify(source)}: ${(cause as Error).message}`,

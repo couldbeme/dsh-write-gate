@@ -1,0 +1,45 @@
+# dsh-write-gate — example commitments file
+#
+# Each commitment is an operator-authored constraint the agent must hold.
+# Tier 1 enforces structural evidence (path globs, command regexes) deterministically.
+# Commitments marked `semantic: true` additionally escalate to the LLM judge
+# when structure alone cannot settle them. Fail mode defaults to closed:
+# if the judge is unreachable, block-severity commitments block.
+
+version: 1
+
+defaults:
+  failMode: closed
+  judgeBudgetPerStep: 8
+
+commitments:
+  - id: no-prod-config
+    statement: Never modify production configuration files.
+    match:
+      kinds: [fs-write]
+      paths: ["config/prod/**", "**/*.prod.*", "**/production.yml"]
+
+  - id: no-force-push
+    statement: Never force-push to a shared branch.
+    match:
+      kinds: [shell]
+      commands: ["git\\s+push\\s+[^\\n]*(-f\\b|--force)"]
+
+  - id: no-destructive-sql
+    statement: Never run destructive SQL against a live database.
+    match:
+      kinds: [shell]
+      commands: ["\\b(DROP\\s+(TABLE|DATABASE|SCHEMA|INDEX)|TRUNCATE|DELETE\\s+FROM)\\b"]
+
+  - id: no-secrets-in-repo
+    statement: Never write a real-shaped secret into a tracked file.
+    match:
+      kinds: [fs-write]
+      paths: ["**/.env", "**/.env.*", "**/credentials*"]
+
+  - id: stay-on-task
+    statement: Do not modify files unrelated to the task the operator assigned.
+    severity: warn
+    semantic: true
+    match:
+      kinds: [fs-write]
