@@ -1,0 +1,7 @@
+# Mounted by `dsh plugin add dsh-write-gate` via the package.json `dsh.bundle.patch` field.
+# The gate fails the mount loudly if the commitments file is missing — author it first
+# (start from commitments.example.yaml).
+- id: write-gate
+  name: dsh-write-gate
+  config:
+    commitmentsFile: COMMITMENTS.yaml

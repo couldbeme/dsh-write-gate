@@ -115,6 +115,14 @@ describe('createGate', () => {
     expect(third.decision).toBe('allow');
   });
 
+  it('passes the caller signal through to the judge', async () => {
+    const controller = new AbortController();
+    const judge = vi.fn(cleanJudge);
+    const gate = createGate(loadCommitments(SET_YAML), { judge });
+    await gate.check(write('src/index.ts'), { signal: controller.signal });
+    expect(judge.mock.calls[0]![0]!.signal).toBe(controller.signal);
+  });
+
   it('memoizes identical (commitment, action) judgements', async () => {
     const judge = vi.fn(cleanJudge);
     const gate = createGate(loadCommitments(SET_YAML), { judge });

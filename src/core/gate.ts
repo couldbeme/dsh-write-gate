@@ -65,9 +65,12 @@ export function createGate(set: CommitmentSet, opts: GateOptions = {}): Gate {
     opts.emit?.(entry);
   }
 
-  async function judgeOnce(c: Commitment, action: NormalizedAction, actionDigest: string): Promise<
-    { kind: 'verdict'; verdict: JudgeVerdict } | { kind: 'unavailable'; reason: string }
-  > {
+  async function judgeOnce(
+    c: Commitment,
+    action: NormalizedAction,
+    actionDigest: string,
+    signal?: AbortSignal,
+  ): Promise<{ kind: 'verdict'; verdict: JudgeVerdict } | { kind: 'unavailable'; reason: string }> {
     const key = `${c.id}:${actionDigest}`;
     const cached = memo.get(key);
     if (cached) return { kind: 'verdict', verdict: cached };
@@ -82,7 +85,10 @@ export function createGate(set: CommitmentSet, opts: GateOptions = {}): Gate {
 
     budgetLeft -= 1;
     try {
-      const verdict = await withTimeout(opts.judge({ statement: c.statement, action }), timeoutMs);
+      const verdict = await withTimeout(
+        opts.judge({ statement: c.statement, action, ...(signal ? { signal } : {}) }),
+        timeoutMs,
+      );
       memo.set(key, verdict);
       return { kind: 'verdict', verdict };
     } catch (cause) {
@@ -95,7 +101,7 @@ export function createGate(set: CommitmentSet, opts: GateOptions = {}): Gate {
       budgetLeft = set.defaults.judgeBudgetPerStep;
     },
 
-    async check(action: NormalizedAction): Promise<GateResult> {
+    async check(action: NormalizedAction, checkOpts: { signal?: AbortSignal } = {}): Promise<GateResult> {
       const records: ContradictionRecord[] = [];
       const actionDigest = digestOf({
         tool: action.tool,
@@ -117,7 +123,7 @@ export function createGate(set: CommitmentSet, opts: GateOptions = {}): Gate {
 
       let decision: Decision = t1.decision;
       for (const c of t1.escalate) {
-        const outcome = await judgeOnce(c, action, actionDigest);
+        const outcome = await judgeOnce(c, action, actionDigest, checkOpts.signal);
         if (outcome.kind === 'verdict') {
           if (outcome.verdict.violation) {
             record(records, c, action, actionDigest, 2, c.severity, outcome.verdict.rationale, outcome.verdict);

@@ -75,6 +75,8 @@ export interface Tier1Result {
 export interface JudgeInput {
   statement: string;
   action: NormalizedAction;
+  /** Caller-owned cancellation, passed through by gate.check(). */
+  signal?: AbortSignal;
 }
 
 export interface JudgeVerdict {
@@ -121,7 +123,7 @@ export interface GateOptions {
 }
 
 export interface Gate {
-  check(action: NormalizedAction): Promise<GateResult>;
+  check(action: NormalizedAction, opts?: { signal?: AbortSignal }): Promise<GateResult>;
   /** Reset the per-step judge budget. Adapters call this at step boundaries. */
   newStep(): void;
 }

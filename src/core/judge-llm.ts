@@ -23,7 +23,7 @@ export class JudgeResponseError extends Error {
 }
 
 /** Adapter-supplied completion function (e.g. wraps dsh ctx.llm). */
-export type Complete = (prompt: string) => Promise<string>;
+export type Complete = (prompt: string, signal?: AbortSignal) => Promise<string>;
 
 export function buildJudgePrompt({ statement, action }: JudgeInput): string {
   const fields = [
@@ -93,7 +93,7 @@ const clamp01 = (n: number): number => Math.min(1, Math.max(0, n));
 
 export function createLlmJudge(complete: Complete): Judge {
   return async (input) => {
-    const raw = await complete(buildJudgePrompt(input));
+    const raw = await complete(buildJudgePrompt(input), input.signal);
     const text = raw.replace(/<think>[\s\S]*?<\/think>/gi, '');
     const verdict = extractVerdict(text);
     if (verdict) {
