@@ -82,6 +82,8 @@ export interface JudgeVerdict {
   /** 0..1 */
   confidence: number;
   rationale: string;
+  /** The judge declined to decide (ABSTAIN rail). Never treated as a block. */
+  abstained?: boolean;
 }
 
 export type Judge = (input: JudgeInput) => Promise<JudgeVerdict>;
