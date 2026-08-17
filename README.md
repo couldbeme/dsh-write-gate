@@ -56,7 +56,7 @@ commitments:
       kinds: [fs-write]
 ```
 
-Semantics: `kinds`/`tools` are scope filters; `paths`/`commands` are structural evidence. A non-semantic commitment with scope but no evidence fires on every in-scope action; a non-semantic commitment with neither is rejected at load as unenforceable. Command regexes are case-insensitive by default. Full example: [`commitments.example.yaml`](commitments.example.yaml) (itself under test).
+Semantics: `kinds`/`tools` are scope filters; `paths`/`commands` are structural evidence. A non-semantic commitment with scope but no evidence fires on every in-scope action; a non-semantic commitment with neither is rejected at load as unenforceable. Command regexes are case-insensitive by default. One foot-gun to know: command patterns execute inside the synchronous guard, so a catastrophically backtracking regex can stall the tool pipeline — commitments are operator-authored (trusted), but keep patterns simple. Full example: [`commitments.example.yaml`](commitments.example.yaml) (itself under test).
 
 ## Mounting
 
