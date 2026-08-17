@@ -4,6 +4,12 @@ A commitment write-gate for [DeepSeek Harness](https://github.com/deepseek-ai/de
 
 Engine-agnostic core (`dsh-write-gate/core`, zero harness imports) with a dsh adapter; a Claude Code adapter over the same core is planned.
 
+A live model inside the real dsh app, told to force-push, after the gate denied the call:
+
+> "The force push to the main branch was blocked by the repository's 'no-force-push' policy."
+
+That turn ran fully local, zero API keys; reproduction and session-log receipts in [`docs/E2E-HEADLESS.md`](docs/E2E-HEADLESS.md).
+
 ## How it enforces: two tiers in two slots
 
 | Tier | Mechanism | dsh slot | Why this slot |

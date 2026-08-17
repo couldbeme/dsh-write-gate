@@ -6,6 +6,8 @@ Use GitHub's private vulnerability reporting on this repository (Security tab â†
 
 ## Threat model, briefly
 
+Plainly, first: this gate contains **drift**, not a hostile agent. Structural (tier-1) evidence is evadable by rephrasing an action into an unrecognized shape â€” indirection lands on the tier-2 judge, and a judge is a filter, not a guarantee. Design accordingly.
+
 In scope:
 - Bypassing enforcement: getting a structurally matched action past the monotonic guard or the pre-execute waterfall (see the bypass test in `test/dsh-plugin.test.ts`).
 - Judge manipulation from untrusted content: action text escaping the data fence, forging verdicts, or defeating the strict verdict parse (see the fence-defang and parser tests in `test/judge-llm.test.ts`).
