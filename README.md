@@ -28,7 +28,7 @@ The tier-2 judge rubric is ported verbatim from that lineage and was measured at
 - **Loud mount failure**: a missing or invalid commitments file fails the deployment instead of mounting a gate that guards nothing — `test/dsh-plugin.test.ts`.
 - **Real pipeline**: the integration suite mounts the plugin into an actual `Context` + `ToolRuntime` from the published rc packages and drives `ctx.tools.execute` — no mocked harness.
 
-Run everything: `pnpm install && pnpm test` (51 tests) and `pnpm typecheck`.
+Run everything: `pnpm install && pnpm test` (53 tests) and `pnpm typecheck`.
 
 Watch the drift story: `pnpm demo` — deterministic, no model required. In-scope work passes, a prod-config edit and a force-push block, and a rogue allow-everything listener fails to bypass the monotonic guard; the contradictions log prints at the end.
 
