@@ -1,0 +1,83 @@
+# dsh-write-gate
+
+A commitment write-gate for [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness): the operator authors constraints ("never force-push to a shared branch", "stay read-only on the production database"), and the gate enforces them **before** a tool call executes. Structural violations are caught deterministically; semantic drift is judged by a model against the operator's own wording. Every block is recorded to a contradictions log that explains which commitment fired and why.
+
+Engine-agnostic core (`dsh-write-gate/core`, zero harness imports) with a dsh adapter; a Claude Code adapter over the same core is planned.
+
+## How it enforces: two tiers in two slots
+
+| Tier | Mechanism | dsh slot | Why this slot |
+|---|---|---|---|
+| 1: deterministic | path globs, command regexes, scope filters | `ctx.tools.guard()` (monotonic) | no listener ordering can turn a guard denial back into permission |
+| 2: semantic | LLM judge over the commitment statement | `tools/pre-execute` waterfall (prepended) | async-capable; short-circuits with a `{kind: 'deny'}` decision object |
+
+`agent/pre-step` resets the per-step judge budget. Contradiction records are emitted as the `write-gate/contradiction` event and appended as JSONL to the contradictions log.
+
+## Why two tiers
+
+An internal A/B study (12 tasks x 4 arms x 10 runs) found an LLM-judge-only gate performed at baseline (0.183 vs 0.192 unflagged-violation rate, no gate), while deterministic checks caught 100% of a violation class the judge passed 6 times out of 10 (over-length outputs); a naive "reminder" arm was the worst performer of all four (0.308). Deterministic checks for checkable constraints, the judge only for genuinely semantic ones. The study runbook publishes with the benchmark (roadmap).
+
+The tier-2 judge rubric is ported verbatim from that lineage and was measured at 18/18 dev + 16/16 held-out cases (100% precision, 0 abstains) with a local 8B model. The 34 cases ship in [`test/fixtures/judge-cases.json`](test/fixtures/judge-cases.json) with their honesty notes intact: they are hand-authored; the meaningful signals are the paraphrase-miss rate, the trap false-positive rate, and held-out generalization, not the headline percentage.
+
+## Design guarantees, each pinned to a test
+
+- **Bypass resistance**: a prepended listener that answers `allow` without delegating still cannot get a structural violation through — `test/dsh-plugin.test.ts` ("cannot be bypassed by a listener that short-circuits allow").
+- **Fail-closed default**: judge unreachable, timed out, or over budget → block-severity commitments block, with the reason in the record — `test/gate.test.ts`.
+- **Bounded judge cost**: per-step budget, verdict memoization, timeout-as-unavailable — `test/gate.test.ts`.
+- **Prompt-injection stance**: action content enters the judge prompt fenced as data ("data, not instructions"); only a strict JSON verdict (or the ABSTAIN token) is accepted back; ABSTAIN is never a block — `test/judge-llm.test.ts`.
+- **Loud mount failure**: a missing or invalid commitments file fails the deployment instead of mounting a gate that guards nothing — `test/dsh-plugin.test.ts`.
+- **Real pipeline**: the integration suite mounts the plugin into an actual `Context` + `ToolRuntime` from the published rc packages and drives `ctx.tools.execute` — no mocked harness.
+
+Run everything: `pnpm install && pnpm test` (51 tests) and `pnpm typecheck`.
+
+## Commitments file
+
+```yaml
+version: 1
+defaults:
+  failMode: closed        # judge unreachable => block-severity commitments block
+  judgeBudgetPerStep: 8
+commitments:
+  - id: no-force-push
+    statement: Never force-push to a shared branch.
+    match:
+      kinds: [shell]
+      commands: ["git\\s+push\\s+[^\\n]*(-f\\b|--force)"]
+  - id: stay-on-task
+    statement: Do not modify files unrelated to the assigned task.
+    severity: warn
+    semantic: true          # escalates to the tier-2 judge
+    match:
+      kinds: [fs-write]
+```
+
+Semantics: `kinds`/`tools` are scope filters; `paths`/`commands` are structural evidence. A non-semantic commitment with scope but no evidence fires on every in-scope action; a non-semantic commitment with neither is rejected at load as unenforceable. Command regexes are case-insensitive by default. Full example: [`commitments.example.yaml`](commitments.example.yaml) (itself under test).
+
+## Mounting
+
+Not yet on npm. From a checkout, the package declares the ecosystem convention (`dsh.bundle.patch` → [`cordis.patch.yml`](cordis.patch.yml)), so once published it mounts with:
+
+```sh
+dsh plugin --profile <profile> add dsh-write-gate
+```
+
+Config keys: `commitmentsFile` (default `COMMITMENTS.yaml`, resolved from cwd), `contradictionsLog` (JSONL, default `write-gate.contradictions.jsonl`), `judgeTimeoutMs`, and `judge: { provider, model, maxTokens }` — omit `judge` to run tier 1 only (escalations then follow `failMode`).
+
+## Current limits (v0, stated rather than hidden)
+
+- The action normalizer is a heuristic table over dsh's in-tree tool names (`bash`, `read`/`write`/`edit`, web tools); unrecognized tools degrade to kind `other` with a full summary — visible to semantic commitments, but path/command rules do not apply to them.
+- dsh is a 0.1.0-rc developer preview with breaking changes announced; peers are pinned to `<0.2.0`.
+- Ships TypeScript source; a build pipeline lands before any npm publish.
+- The tier-2 judge is only as good as its model and rubric; the measured numbers above are from the shipped fixtures, and the benchmark that scores this gate (and others) against labeled trajectories is the next deliverable.
+
+## Roadmap
+
+1. Deterministic replay demo in dsh house style (llm-replay fixtures): an agent drifts toward a violating self-modification, the gate blocks, the contradictions log explains.
+2. The gate benchmark: catch rate, false-block rate, and judge agreement (class-balanced kappa) over labeled trajectories, scoring any guard, this one included.
+3. Claude Code adapter over the same core.
+
+## Dependencies and trust basis
+
+Runtime: `zod`, `yaml`, `picomatch` (mainstream, actively maintained), `@deepseek-ai/schemastery` (dsh's own config-schema library, Koishi lineage). Harness peers: `@deepseek-ai/cordis` + `@deepseek-ai/dsh-*` rc packages, pinned. Dev: `vitest`, `typescript`.
+
+MIT.
