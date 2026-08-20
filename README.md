@@ -66,6 +66,31 @@ commitments:
 
 Semantics: `kinds`/`tools` are scope filters; `paths`/`commands` are structural evidence. A non-semantic commitment with scope but no evidence fires on every in-scope action; a non-semantic commitment with neither is rejected at load as unenforceable. Command regexes are case-insensitive by default. One foot-gun to know: command patterns execute inside the synchronous guard, so a catastrophically backtracking regex can stall the tool pipeline — commitments are operator-authored (trusted), but keep patterns simple. Full example: [`commitments.example.yaml`](commitments.example.yaml) (itself under test).
 
+## CLI (`dsh-write-gate check`)
+
+A standalone check outside any harness, for CI, pre-commit hooks, or manual use:
+
+```sh
+dsh-write-gate check --commitments <file> --tool <name> [--path <p> ...] [--command <c>] [--explain] [--json]
+```
+
+**v0 is tier-1 (structural) only — no `--judge` flag exists yet.** Every `semantic: true` commitment that structure alone cannot settle always escalates to "no judge configured", and then follows the commitments file's `failMode`. With the default `failMode: closed`, that means **every escalating semantic commitment always blocks** in the CLI today. A `--judge` flag is an explicitly deferred follow-up; until then, treat semantic commitments as block-on-touch when driving the CLI directly (the dsh plugin itself has no such limit when `judge` is configured).
+
+`--tool` is required (e.g. `bash`, `write`, `read`); it gets no enum validation beyond non-empty — `kind` is derived from it and cannot be set directly. `--path` may repeat; `--command` takes the last value if repeated. At least one of `--path` / `--command` is required.
+
+Exit codes:
+
+| Code | Meaning |
+|---|---|
+| 0 | ALLOW, including a fail-open degraded allow (degradation is surfaced in the output, never by changing the exit code) |
+| 1 | BLOCK — unified across tier-1 structural, tier-2 judged, and tier-2 fail-closed blocks |
+| 2 | Usage error |
+| 3 | WARN |
+| 4 | Commitments file unreadable, or invalid (bad YAML, bad regex, duplicate id, schema violation, unsupported version) |
+| 5 | Internal/unexpected error |
+
+`--json` prints only the JSON document to stdout (safe for `| jq .`); everything advisory goes to stderr. `--explain` expands each record with the commitment, its statement, severity, tier, matched pattern, and rationale; it is a documented no-op under `--json`.
+
 ## Mounting
 
 The package declares the ecosystem convention (`dsh.bundle.patch` → [`cordis.patch.yml`](cordis.patch.yml)) and mounts with:
@@ -78,6 +103,7 @@ Config keys: `commitmentsFile` (default `COMMITMENTS.yaml`, resolved from cwd), 
 
 ## Current limits (v0, stated rather than hidden)
 
+- The CLI (`dsh-write-gate check`) is tier-1 only: it never configures a judge, so every escalating semantic commitment reports "no judge configured" and follows `failMode` — block by default. See the CLI section above.
 - The action normalizer is a heuristic table over dsh's in-tree tool names (`bash`, `read`/`write`/`edit`, web tools); unrecognized tools degrade to kind `other` with a full summary — visible to semantic commitments, but path/command rules do not apply to them.
 - dsh is a 0.1.0-rc developer preview with breaking changes announced; peers are pinned to `<0.2.0`.
 - First release (0.1.0); `pnpm build` emits `dist/`, `prepublishOnly` gates every publish on build + tests.

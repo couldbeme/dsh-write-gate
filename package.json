@@ -10,6 +10,9 @@
   },
   "homepage": "https://github.com/couldbeme/dsh-write-gate#readme",
   "bugs": "https://github.com/couldbeme/dsh-write-gate/issues",
+  "bin": {
+    "dsh-write-gate": "./dist/cli/index.js"
+  },
   "keywords": [
     "dsh-plugin",
     "deepseek-harness",
@@ -48,8 +51,9 @@
   "scripts": {
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:e2e": "pnpm build && vitest run --config vitest.e2e.config.ts",
     "typecheck": "tsc --noEmit",
-    "build": "rm -rf dist && tsc -p tsconfig.build.json",
+    "build": "rm -rf dist && tsc -p tsconfig.build.json && chmod +x dist/cli/index.js",
     "demo": "pnpm build && node demo/run.mjs",
     "prepublishOnly": "pnpm build && pnpm test"
   },
