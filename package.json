@@ -1,6 +1,6 @@
 {
   "name": "dsh-write-gate",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Commitment write-gate for AI coding agents: two-tier (deterministic + LLM judge) pre-execution policy. Engine-agnostic core with a DeepSeek Harness (dsh) adapter.",
   "type": "module",
   "license": "MIT",
@@ -55,6 +55,7 @@
     "typecheck": "tsc --noEmit",
     "build": "rm -rf dist && tsc -p tsconfig.build.json && chmod +x dist/cli/index.js",
     "demo": "pnpm build && node demo/run.mjs",
+    "check:claims": "node scripts/check-claims.mjs",
     "prepublishOnly": "pnpm build && pnpm test"
   },
   "peerDependencies": {
