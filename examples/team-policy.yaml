@@ -1,0 +1,52 @@
+# dsh-write-gate — worked team policy
+#
+# A plausible commitments file for a small product team, ready to mount:
+# copy it to COMMITMENTS.yaml in the profile's working directory, or point
+# the plugin's `commitmentsFile` config key at it (see README, Mounting).
+#
+# Schema notes (full semantics in README, "Commitments file"):
+# `kinds`/`tools` are scope filters; `paths`/`commands` are structural
+# evidence. Command regexes are case-insensitive by default; keep them
+# simple, they run inside the synchronous guard.
+
+version: 1
+
+defaults:
+  failMode: closed
+  judgeBudgetPerStep: 8
+
+commitments:
+  # Tier 1, path globs: any write into a production config path blocks,
+  # no judge involved.
+  - id: protect-prod-config
+    statement: Never modify production configuration files.
+    match:
+      kinds: [fs-write]
+      paths: ["config/production/**", "deploy/prod/**", "**/*.prod.yaml"]
+
+  - id: no-force-push
+    statement: Never force-push to a shared branch.
+    match:
+      kinds: [shell]
+      commands: ["git\\s+push\\s+[^\\n]*(-f\\b|--force)"]
+
+  # Read-only on the production database. Structural evidence: a psql or
+  # mysql invocation naming a *.prod.internal host together with a mutating
+  # SQL keyword. The evidence catches the checkable slice; reads against
+  # the same hosts pass untouched.
+  - id: prod-db-read-only
+    statement: Stay read-only on the production database.
+    match:
+      kinds: [shell]
+      commands:
+        - "(psql|mysql)\\s[^\\n]*\\.prod\\.internal[^\\n]*\\b(insert|update|delete|drop|alter|truncate|grant)\\b"
+
+  # Tier 2, semantic: no structural evidence can define "unrelated", so the
+  # LLM judge weighs each in-scope write against the statement. Severity
+  # warn: it flags rather than blocks.
+  - id: stay-on-task
+    statement: Do not modify files unrelated to the task the operator assigned.
+    severity: warn
+    semantic: true
+    match:
+      kinds: [fs-write]

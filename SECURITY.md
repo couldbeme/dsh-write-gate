@@ -15,7 +15,7 @@ In scope:
 
 Out of scope:
 - The commitments file and plugin config: these are operator-authored and trusted by design (a hostile operator already owns the deployment). This includes pathological command regexes, which are documented as a foot-gun in the README.
-- The judge model's own quality on semantic cases: that is measured, not defended (see the fixtures and the benchmark roadmap).
+- The judge model's own quality on semantic cases: that is measured, not defended (see the fixtures and the [holdline](https://github.com/couldbeme/holdline) benchmark).
 - Vulnerabilities in DeepSeek Harness itself: report those upstream; two findings we hit are documented in `docs/E2E-HEADLESS.md`.
 
 ## Supported versions
