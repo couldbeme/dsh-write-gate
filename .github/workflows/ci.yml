@@ -16,5 +16,6 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm typecheck
       - run: pnpm test
+      - run: node scripts/check-claims.mjs
       - run: pnpm build
       - run: pnpm test:e2e
