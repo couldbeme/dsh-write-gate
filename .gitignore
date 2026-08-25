@@ -7,6 +7,7 @@ coverage/
 .vscode/
 .idea/
 .env*
+supabase/
 
 # runtime artifacts the gate itself creates in cwd — an operator's live rules
 # and the contradictions log (action summaries) must never be committed
