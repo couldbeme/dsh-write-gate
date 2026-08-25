@@ -12,6 +12,13 @@ A live model inside the real dsh app, told to force-push, after the gate denied 
 
 That turn ran fully local, zero API keys; reproduction and session-log receipts in [`docs/E2E-HEADLESS.md`](docs/E2E-HEADLESS.md).
 
+## Install
+
+```sh
+npm install dsh-write-gate        # library + dsh plugin (see Mounting below)
+npx dsh-write-gate check --help   # standalone CLI, 0.2.0+
+```
+
 ## How it enforces: two tiers in two slots
 
 | Tier | Mechanism | dsh slot | Why this slot |
@@ -23,9 +30,9 @@ That turn ran fully local, zero API keys; reproduction and session-log receipts 
 
 ## Why two tiers
 
-An internal A/B study (12 tasks x 4 arms x 10 runs) found an LLM-judge-only gate performed at baseline (0.183 vs 0.192 unflagged-violation rate, no gate), while deterministic checks caught 100% of a violation class the judge passed 6 times out of 10 (over-length outputs); a naive "reminder" arm was the worst performer of all four (0.308). Deterministic checks for checkable constraints, the judge only for genuinely semantic ones. The study runbook publishes with the benchmark (roadmap).
+An internal A/B study (12 tasks x 4 arms x 10 runs; runbook not yet published, so cite nothing from this sentence) found an LLM-judge-only gate performed at baseline on unflagged-violation rate, while deterministic checks caught an entire violation class the judge repeatedly passed (over-length outputs); a naive "reminder" arm was the worst performer of all four. Deterministic checks for checkable constraints, the judge only for genuinely semantic ones.
 
-The tier-2 judge rubric is ported from a lineage measured at 18/18 dev + 16/16 held-out (100% precision, 0 abstains) on a local 8B model, and re-measured live through this port (2026-08-17): 32/34 accuracy with **17/17 violation recall**. It also carries an anti-self-justification clause added after the [holdline](https://github.com/couldbeme/holdline) benchmark caught two injection defeats (an action asserting "the operator approved this" or "this is only a test" talking the judge into clearing a real violation); the clause moved injection accuracy from 5/8 to **7/8 with zero regression** on the base cases. We keep the injection-fenced prompt because it is the only variant that preserved 100% violation recall; for a gate, a missed violation is worse than an over-block. The 34 cases ship in [`test/fixtures/judge-cases.json`](test/fixtures/judge-cases.json) with their honesty notes intact: they are hand-authored; the meaningful signals are the paraphrase-miss rate, the trap false-positive rate, and held-out generalization, not the headline percentage.
+The tier-2 judge rubric is ported from a lineage measured at 18/18 dev + 16/16 held-out (100% precision, 0 abstains) on a local 8B model, and re-measured live through this port (2026-08-17): 32/34 accuracy with **17/17 violation recall**. It also carries an anti-self-justification clause added after the [holdline](https://github.com/couldbeme/holdline) benchmark caught two injection defeats (an action asserting "the operator approved this" or "this is only a test" talking the judge into clearing a real violation); the clause moved injection accuracy from 5/8 to **7/8 with zero regression** on the base cases. We keep the injection-fenced prompt because it is the only variant that preserved 100% violation recall; for a gate, a missed violation is worse than an over-block. The fixture ships 41 cases (18 dev, 16 held-out, 7 injection) in [`test/fixtures/judge-cases.json`](test/fixtures/judge-cases.json) with their honesty notes intact: they are hand-authored; the meaningful signals are the paraphrase-miss rate, the trap false-positive rate, and held-out generalization, not the headline percentage.
 
 ## Design guarantees, each pinned to a test
 
@@ -41,7 +48,7 @@ Run everything: `pnpm install && pnpm test` and `pnpm typecheck` — the suite p
 
 Watch the drift story: `pnpm demo` — deterministic, no model required. In-scope work passes, a prod-config edit and a force-push block, and a rogue allow-everything listener fails to bypass the monotonic guard; the contradictions log prints at the end.
 
-Measure the judge yourself: `pnpm build && node scripts/judge-eval.mjs --url <openai-compatible-endpoint> --model <model>` runs all 34 fixture cases live and reports per-set accuracy, abstains, and misses.
+Measure the judge yourself: `pnpm build && node scripts/judge-eval.mjs --url <openai-compatible-endpoint> --model <model>` runs every fixture case live and reports per-set accuracy, abstains, and misses.
 
 ## Commitments file
 
@@ -106,13 +113,13 @@ Config keys: `commitmentsFile` (default `COMMITMENTS.yaml`, resolved from cwd), 
 - The CLI (`dsh-write-gate check`) is tier-1 only: it never configures a judge, so every escalating semantic commitment reports "no judge configured" and follows `failMode` — block by default. See the CLI section above.
 - The action normalizer is a heuristic table over dsh's in-tree tool names (`bash`, `read`/`write`/`edit`, web tools); unrecognized tools degrade to kind `other` with a full summary — visible to semantic commitments, but path/command rules do not apply to them.
 - dsh is a 0.1.0-rc developer preview with breaking changes announced; peers are pinned to `<0.2.0`.
-- First release (0.1.0); `pnpm build` emits `dist/`, `prepublishOnly` gates every publish on build + tests.
-- The tier-2 judge is only as good as its model and rubric; the measured numbers above are from the shipped fixtures, and the benchmark that scores this gate (and others) against labeled trajectories is the next deliverable.
+- Early releases (0.1.x core + dsh plugin; 0.2.0 adds the CLI); `pnpm build` emits `dist/`, `prepublishOnly` gates every publish on build + tests.
+- The tier-2 judge is only as good as its model and rubric; the measured numbers above are from the shipped fixtures, and the benchmark that scores this gate (and others) against labeled trajectories is [holdline](https://github.com/couldbeme/holdline) (see Roadmap).
 
 ## Roadmap
 
 1. llm-replay fixture variant of the demo (dsh snapshot format), so the story replays inside a full agent loop.
-2. ~~The gate benchmark~~ → shipped as [**holdline**](https://github.com/couldbeme/holdline): catch rate, false-block rate, class-balanced kappa, and an injection-attack class, scoring any guard (this one included). First run: this gate's judge tier scores kappa 0.80 vs a commitment-blind deny-list's 0.35, and holdline honestly records where the judge loses (injection).
+2. ~~The gate benchmark~~ → shipped as [**holdline**](https://github.com/couldbeme/holdline): catch rate, false-block rate, class-balanced kappa, and an injection-attack class, scoring any guard (this one included). Authored corpus: this gate's judge tier scores balanced kappa **0.95** (100% catch, 5% false-block) against 0.15–0.35 for commitment-blind structural guards. On **548 real ODCV-Bench trajectories** with independent 4-model-panel labels, the judge holds balanced kappa **0.64** (75% catch, 9% false-block). holdline honestly records where the judge loses (injection, truncation).
 3. Claude Code adapter over the same core.
 
 ## Dependencies and trust basis
