@@ -108,6 +108,13 @@ dsh plugin --profile <profile> add dsh-write-gate
 
 Config keys: `commitmentsFile` (default `COMMITMENTS.yaml`, resolved from cwd), `contradictionsLog` (JSONL, default `write-gate.contradictions.jsonl`), `judgeTimeoutMs`, and `judge: { provider, model, maxTokens }` — omit `judge` to run tier 1 only (escalations then follow `failMode`).
 
+A worked starting policy lives at [`examples/team-policy.yaml`](examples/team-policy.yaml): copy it in as `COMMITMENTS.yaml`, or point `commitmentsFile` at it.
+Production configs are protected by `fs-write` path globs, tier 1 only.
+Force-pushes are caught by a shell command regex.
+The production database is held read-only by a regex matching psql/mysql invocations that name a prod host together with a mutating SQL keyword; reads against the same hosts pass.
+A `severity: warn`, `semantic: true` stay-on-task commitment escalates to the tier-2 judge.
+`pnpm demo` (above) is the narrative version of the same kind of policy.
+
 ## Current limits (v0, stated rather than hidden)
 
 - The CLI (`dsh-write-gate check`) is tier-1 only: it never configures a judge, so every escalating semantic commitment reports "no judge configured" and follows `failMode` — block by default. See the CLI section above.
