@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CliUsageError } from '../../src/cli/errors.js';
+import { CliHelpRequested, CliUsageError } from '../../src/cli/errors.js';
 import { parseCliArgs } from '../../src/cli/args.js';
 
 const BASE = ['check', '--commitments', 'commitments.yaml', '--tool', 'bash', '--command', 'ls'];
@@ -86,5 +86,65 @@ describe('parseCliArgs', () => {
 
   it('throws CliUsageError when neither --path nor --command is given', () => {
     expect(() => parseCliArgs(['check', '--commitments', 'c.yaml', '--tool', 'bash'])).toThrow(CliUsageError);
+  });
+
+  // toThrow(CliHelpRequested) would degrade to a bare toThrow() while
+  // CliHelpRequested is still undefined (not yet implemented) and pass
+  // vacuously against the CliUsageError thrown today — catch explicitly and
+  // assert instanceof instead, which hard-fails on an undefined constructor.
+  function catchError(argv: string[]): unknown {
+    try {
+      parseCliArgs(argv);
+    } catch (error) {
+      return error;
+    }
+    throw new Error(`expected parseCliArgs(${JSON.stringify(argv)}) to throw`);
+  }
+
+  it('throws CliHelpRequested (not CliUsageError) for --help before any subcommand', () => {
+    expect(catchError(['--help'])).toBeInstanceOf(CliHelpRequested);
+  });
+
+  it('throws CliHelpRequested for -h before any subcommand', () => {
+    expect(catchError(['-h'])).toBeInstanceOf(CliHelpRequested);
+  });
+
+  it('throws CliHelpRequested for "check --help" without requiring --commitments or --tool', () => {
+    expect(catchError(['check', '--help'])).toBeInstanceOf(CliHelpRequested);
+  });
+
+  it('help text (from --help) contains the check command line, the --tool required note, and the full exit-code table', () => {
+    const caught = catchError(['--help']);
+    expect(caught).toBeInstanceOf(CliHelpRequested);
+    const text = (caught as CliHelpRequested).text;
+    expect(text).toContain('dsh-write-gate check --commitments <file> --tool <name>');
+    expect(text).toMatch(/--tool.*required/i);
+    expect(text).toContain('0 ALLOW');
+    expect(text).toContain('1 BLOCK');
+    expect(text).toContain('2 usage error');
+    expect(text).toContain('3 WARN');
+    expect(text).toMatch(/4 .*commitments file unreadable/i);
+    expect(text).toMatch(/5 .*internal/i);
+  });
+
+  it('help text is identical whether requested via --help, -h, or "check --help"', () => {
+    const textOf = (argv: string[]): string => {
+      const caught = catchError(argv);
+      expect(caught).toBeInstanceOf(CliHelpRequested);
+      return (caught as CliHelpRequested).text;
+    };
+    const topLevel = textOf(['--help']);
+    expect(topLevel.length).toBeGreaterThan(0);
+    expect(textOf(['-h'])).toBe(topLevel);
+    expect(textOf(['check', '--help'])).toBe(topLevel);
+  });
+
+  it('--json still parses normally when --help is not requested (regression)', () => {
+    const args = parseCliArgs([...BASE, '--json']);
+    expect(args.json).toBe(true);
+  });
+
+  it('still throws CliUsageError on an unknown flag even though --help exists as a recognized option', () => {
+    expect(() => parseCliArgs([...BASE, '--bogus'])).toThrow(CliUsageError);
   });
 });

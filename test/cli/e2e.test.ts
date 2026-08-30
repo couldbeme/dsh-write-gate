@@ -56,4 +56,24 @@ describe('dsh-write-gate check (e2e, real spawned binary)', () => {
     expect(doc.decision).toBe('block');
     expect(doc.exitCode).toBe(1);
   });
+
+  it('prints usage to stdout and exits 0 for --help, without requiring --commitments or --tool', () => {
+    const result = run(['--help']);
+    expect(result.error).toBeUndefined();
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain('dsh-write-gate check --commitments <file> --tool <name>');
+    expect(result.stdout).toContain('--tool');
+  });
+
+  it('prints usage to stdout and exits 0 for -h', () => {
+    const result = run(['-h']);
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain('dsh-write-gate check --commitments <file> --tool <name>');
+  });
+
+  it('prints usage to stdout and exits 0 for "check --help"', () => {
+    const result = run(['check', '--help']);
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain('dsh-write-gate check --commitments <file> --tool <name>');
+  });
 });

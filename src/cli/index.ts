@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { parseCliArgs } from './args.js';
-import { CliUsageError } from './errors.js';
+import { CliHelpRequested, CliUsageError } from './errors.js';
 import { EXIT_INTERNAL_ERROR, EXIT_USAGE } from './exit-codes.js';
 import { runCheck } from './run.js';
 
@@ -22,6 +22,11 @@ main()
     process.exitCode = exitCode;
   })
   .catch((error: unknown) => {
+    if (error instanceof CliHelpRequested) {
+      process.stdout.write(error.text);
+      process.exitCode = 0;
+      return;
+    }
     if (error instanceof CliUsageError) {
       process.stderr.write(`error: ${error.message}\n`);
       process.exitCode = EXIT_USAGE;

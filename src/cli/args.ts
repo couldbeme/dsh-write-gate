@@ -1,5 +1,6 @@
 import { parseArgs } from 'node:util';
-import { CliUsageError } from './errors.js';
+import { CliHelpRequested, CliUsageError } from './errors.js';
+import { formatHelp } from './help.js';
 
 export interface CliArgs {
   commitments: string;
@@ -21,6 +22,14 @@ export interface CliArgs {
  */
 export function parseCliArgs(argv: string[]): CliArgs {
   const [subcommand, ...rest] = argv;
+
+  // `--help`/`-h` short-circuit everything else, before the "check" subcommand
+  // check and before any required-flag validation: a documentation request
+  // is never a usage error, and must not need --commitments or --tool.
+  if (subcommand === '--help' || subcommand === '-h') {
+    throw new CliHelpRequested(formatHelp());
+  }
+
   if (subcommand !== 'check') {
     throw new CliUsageError(
       subcommand === undefined
@@ -36,6 +45,7 @@ export function parseCliArgs(argv: string[]): CliArgs {
     command?: string;
     explain?: boolean;
     json?: boolean;
+    help?: boolean;
   };
   try {
     ({ values } = parseArgs({
@@ -47,12 +57,17 @@ export function parseCliArgs(argv: string[]): CliArgs {
         command: { type: 'string' },
         explain: { type: 'boolean', default: false },
         json: { type: 'boolean', default: false },
+        help: { type: 'boolean', default: false, short: 'h' },
       },
       strict: true,
       allowPositionals: false,
     }));
   } catch (cause) {
     throw new CliUsageError((cause as Error).message, { cause });
+  }
+
+  if (values.help) {
+    throw new CliHelpRequested(formatHelp());
   }
 
   if (!values.commitments) {
