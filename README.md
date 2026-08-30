@@ -16,7 +16,7 @@ That turn ran fully local, zero API keys; reproduction and session-log receipts 
 
 ```sh
 npm install dsh-write-gate        # library + dsh plugin (see Mounting below)
-npx dsh-write-gate check --help   # standalone CLI, 0.2.0+
+npx dsh-write-gate check --help   # standalone CLI: ships in 0.2.0 (tagged, not yet on npm; npm latest is 0.1.1, no CLI)
 ```
 
 ## How it enforces: two tiers in two slots
@@ -120,7 +120,7 @@ A `severity: warn`, `semantic: true` stay-on-task commitment escalates to the ti
 - The CLI (`dsh-write-gate check`) is tier-1 only: it never configures a judge, so every escalating semantic commitment reports "no judge configured" and follows `failMode` — block by default. See the CLI section above.
 - The action normalizer is a heuristic table over dsh's in-tree tool names (`bash`, `read`/`write`/`edit`, web tools); unrecognized tools degrade to kind `other` with a full summary — visible to semantic commitments, but path/command rules do not apply to them.
 - dsh is a 0.1.0-rc developer preview with breaking changes announced; peers are pinned to `<0.2.0`.
-- Early releases (0.1.x core + dsh plugin; 0.2.0 adds the CLI); `pnpm build` emits `dist/`, `prepublishOnly` gates every publish on build + tests.
+- Early releases (0.1.x core + dsh plugin on npm; 0.2.0 adds the CLI, tagged on GitHub, npm publish pending); `pnpm build` emits `dist/`, `prepublishOnly` gates every publish on build + tests.
 - The tier-2 judge is only as good as its model and rubric; the measured numbers above are from the shipped fixtures, and the benchmark that scores this gate (and others) against labeled trajectories is [holdline](https://github.com/couldbeme/holdline) (see Roadmap).
 
 ## Roadmap
