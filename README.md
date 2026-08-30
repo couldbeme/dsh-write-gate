@@ -16,8 +16,9 @@ That turn ran fully local, zero API keys; reproduction and session-log receipts 
 
 ```sh
 npm install dsh-write-gate        # library + dsh plugin (see Mounting below)
-npx dsh-write-gate check --help   # standalone CLI: ships in 0.2.0 (tagged, not yet on npm; npm latest is 0.1.1, no CLI)
 ```
+
+The `dsh-write-gate check` CLI ships in 0.2.0, tagged on GitHub with the npm publish pending; `npm install` today resolves 0.1.1, which has no CLI. Until the publish, run it from a clone: `pnpm install && pnpm build && node dist/cli/index.js --help`.
 
 ## How it enforces: two tiers in two slots
 
@@ -79,6 +80,7 @@ A standalone check outside any harness, for CI, pre-commit hooks, or manual use:
 
 ```sh
 dsh-write-gate check --commitments <file> --tool <name> [--path <p> ...] [--command <c>] [--explain] [--json]
+dsh-write-gate --help | -h   # or: dsh-write-gate check --help (prints this usage synopsis, exit 0)
 ```
 
 **v0 is tier-1 (structural) only — no `--judge` flag exists yet.** Every `semantic: true` commitment that structure alone cannot settle always escalates to "no judge configured", and then follows the commitments file's `failMode`. With the default `failMode: closed`, that means **every escalating semantic commitment always blocks** in the CLI today. A `--judge` flag is an explicitly deferred follow-up; until then, treat semantic commitments as block-on-touch when driving the CLI directly (the dsh plugin itself has no such limit when `judge` is configured).
